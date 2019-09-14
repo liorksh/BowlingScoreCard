@@ -21,13 +21,25 @@ namespace BowlingGame
         }
 
         /// <summary>
-        /// Create a new score card with additional new frame
+        /// Create a new score card with additional new frame.
+        /// Copy the existing frames and add the new ones.
         /// </summary>
         public ScoreCard Add(BowlingFrame frame)
         {
             return new ScoreCard(ImmutableArray.Create<BowlingFrame>().
                 AddRange(Frames).
                 Add(frame));
+        }
+
+        /// <summary>
+        /// Create a new score card with additional new frames.
+        /// Copy the existing frames and add the new ones.
+        /// </summary>
+        public ScoreCard AddRange(BowlingFrame[] frames)
+        {
+            return new ScoreCard(ImmutableArray.Create<BowlingFrame>().
+                AddRange(Frames).
+                AddRange(frames));
         }
 
         public BowlingFrame GetFrame(int index)
@@ -37,8 +49,6 @@ namespace BowlingGame
 
             return Frames[index];
         }
-
-    
 
 
         /// <summary>

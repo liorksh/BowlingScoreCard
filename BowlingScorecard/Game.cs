@@ -15,42 +15,6 @@ namespace BowlingGame
         public const int NUM_OF_REGULAR_ROUNDS = 10;
         public const int NUM_OF_PINS = 10;
 
-        /// <summary>
-        /// Generates an empty score cards and initiate all the frames (to avoid NULL).
-        /// The score card is a short array that doesn't consume a lot of memory, thus it's easier to initiate it this way. 
-        /// </summary>
-        /// <returns></returns>
-        private static BowlingFrame[] GenerteEmptyScoreCards()
-        {
-            return GenerteEmptyScoreCards(Game.NUM_OF_REGULAR_ROUNDS+EXTRA_ROUNDS, Game.NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS);
-        }
-
-        /// <summary>
-        /// Adhering to the functional programming concepts:
-        /// 1. Avoid changing an existing variable
-        /// 2. Avoid loops
-        /// </summary>
-        private static BowlingFrame[] GenerteEmptyScoreCards(int maxArrayLength, int currentIndex)
-        {
-            if (currentIndex == 0)
-            {
-                return new BowlingFrame[currentIndex];
-            }
-
-            // Creating a new array to avoid changing the array that was received as a parameter. 
-            BowlingFrame[] scoreCard = GenerteEmptyScoreCards(maxArrayLength, currentIndex - 1);
-
-            BowlingFrame[] newScoreCard = new BowlingFrame[currentIndex];
-
-            // The Array.Copy operation is costly in C#, however, it was chosen to exemplify the Functional Programing principle.  
-            Array.Copy(scoreCard, newScoreCard, currentIndex - 1);
-
-            BowlingFrame newFrame = new BowlingFrame(0,0);
-            newScoreCard[currentIndex-1] = newFrame;
-
-            return newScoreCard;
-        }
-
         public static ScoreCard RollNewFrame(ScoreCard scoreCard, int tryNo1, int tryNo2)
         {
             BowlingFrame newframe = new BowlingFrame(tryNo1, tryNo2);
@@ -59,28 +23,25 @@ namespace BowlingGame
                 throw new IllegalBowlingActionException("Invalid frame");
             }
 
-            if (scoreCard.Length == NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS)
-            {
-                throw new IllegalBowlingActionException("The game exceeds from its maximum number of frames");
-            }
-
             if (IsEligibleForAnotherTry(scoreCard) == false)
             {
                 throw new IllegalBowlingActionException("The game has reach to its maximum rounds");
             }
 
-            scoreCard.Add(new BowlingFrame(tryNo1, tryNo2));
+            ScoreCard newScoreCard = scoreCard.Add(new BowlingFrame(tryNo1, tryNo2));
 
             // Validate the new set of frames
-            if (Game.IsValid(scoreCard) == false)
+            if (Game.IsValid(newScoreCard) == false)
             {
                 throw new IllegalBowlingActionException("An invalid frame was added");
             }
 
-            return scoreCard.Add(new BowlingFrame(tryNo1, tryNo2));
+            return newScoreCard;
         }
 
-        public static BowlingFrame[] RollNewFrame(BowlingFrame[] scoreCard, int tryNo1, int tryNo2)
+        /*
+         * This method is redundant
+        private static BowlingFrame[] RollNewFrame(BowlingFrame[] scoreCard, int tryNo1, int tryNo2)
         {
             if(scoreCard.Length == NUM_OF_REGULAR_ROUNDS+EXTRA_ROUNDS)
             {
@@ -105,13 +66,18 @@ namespace BowlingGame
 
             return newScoreCard.ToBuilder().ToArray();
         }
+        */
 
         public static bool IsEligibleForAnotherTry(ScoreCard scoreCard)
         {
-            if (!IsExtraRound(scoreCard.Length))
-                return true;
+            if (IsBeyondExtraRound(scoreCard.Length))
+                return false;
 
-            FrameTypeEnum previousFrameType = (scoreCard.GetFrame(scoreCard.Length)?.FrameType)?? FrameTypeEnum.Empty;
+            if (IsInNormalRounds(scoreCard.Length))
+                return true;
+            
+            // Get the type of the last round
+            FrameTypeEnum previousFrameType = (scoreCard.GetFrame(Game.NUM_OF_REGULAR_ROUNDS-1)?.FrameType)?? FrameTypeEnum.Empty;
 
             // this is an extra frame and the first try is Strike
             if (previousFrameType == FrameTypeEnum.Spare ||
@@ -121,7 +87,9 @@ namespace BowlingGame
             // this is an extra frame, but the score is not Spare
             return false;
         }
-
+        
+        /*
+         * This method is redundant
         public static bool IsEligibleForAnotherTry(BowlingFrame[] frames, int frameNumber)
         {
             if (frameNumber < NUM_OF_REGULAR_ROUNDS)
@@ -138,15 +106,16 @@ namespace BowlingGame
             // this is an extra frame, but the score is not Spare
             return false;
         }
+        */
 
         public static bool IsValid(ScoreCard scoreCard)
         {
             return IsValid(scoreCard.Frames);
         }
 
-        public static bool IsValid(BowlingFrame[] frames)
+        private static bool IsValid(BowlingFrame[] frames)
         {
-            if (frames.Length > NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS)
+            if (IsBeyondExtraRound(frames.Length))
             {
                 return false;
             }
@@ -180,38 +149,59 @@ namespace BowlingGame
 
         public static int GetScore(ScoreCard scoreCard)
         {
-            return GetScore(scoreCard.Frames, scoreCard.Length - 1);
+            return GetScore(scoreCard.Frames);
         }
 
-        public static int GetScore(BowlingFrame[] frames)
+        private static int GetScore(BowlingFrame[] frames)
         {
             return GetScore(frames, frames.Length - 1);
         }
 
-        private static int GetScore(BowlingFrame[] frames, int length)
+        private static int GetScore(BowlingFrame[] frames, int index)
         {
-            if (length < 0 || length>=frames.Length)
+            if (index < 0 || index>=frames.Length)
                 return 0;
 
             int additionalScore;
-            int score = GetFrameScore(frames, length) + GetScore(frames, length - 1);
+            int score = GetFrameScore(frames, index) + GetScore(frames, index - 1);
 
-            additionalScore = CalculateAdditionalScore(frames, length);
+            additionalScore = CalculateAdditionalScore(frames, index);
 
             return score+ additionalScore;
         }
 
         private static int GetFrameScore(BowlingFrame[] frames, int index)
         {
-            if (IsExtraRound(index))
+            // Do not return the score of the extra round (if exists), as it is calculated already.
+            if (IsIndexExtraRound(index))
                 return 0;
 
             return frames[index].Score;
         }
 
-        private static bool IsExtraRound(int length)
+        private static bool IsBeyondExtraRound(int length)
         {
-            return (length >= NUM_OF_REGULAR_ROUNDS);
+            return length > Game.NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS;
+        }
+
+        private static bool IsIncludeExtraRound(int length)
+        {
+            return length >= Game.NUM_OF_REGULAR_ROUNDS+ EXTRA_ROUNDS;
+        }
+
+        private static bool IsIndexExtraRound(int length)
+        {
+            return length == Game.NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS-1;
+        }
+
+        //private static bool IsExtraRound(int length)
+        //{
+        //    return (length == Game.NUM_OF_REGULAR_ROUNDS);
+        //}
+
+        private static bool IsInNormalRounds(int length)
+        {
+            return (length < Game.NUM_OF_REGULAR_ROUNDS);
         }
 
         private static int CalculateAdditionalScore(BowlingFrame[] frames, int index)
@@ -226,17 +216,24 @@ namespace BowlingGame
                 int additonalScore = frames[index].Try1 + frames[index].Try2;
                 int scoreIfPreviousWasStrike = 0;
 
+                // Check if the previous-previous round was Strike. If yes, need to add the first try to the score,
+                // since a Strike rule is to add the consecutive two tries. 
                 if ((GetFrameType(frames, index - 2) == FrameTypeEnum.Strike))
                 {
                     scoreIfPreviousWasStrike = frames[index].Try1;
                 }
                 
+                // Add the additional score of the current round and the prev-prev score (if needed).
                 return additonalScore + scoreIfPreviousWasStrike;
             }
 
             return 0;
         }
 
+        /// <summary>
+        /// The method returns the score of a frame, based on its index.
+        /// If the index is invalid, the method returns 0.
+        /// </summary>
         public static FrameTypeEnum GetFrameType(BowlingFrame[] frames, int index)
         {
             if (index < 0 || index >= frames.Length)

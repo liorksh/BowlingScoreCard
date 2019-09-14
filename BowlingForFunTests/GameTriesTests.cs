@@ -28,14 +28,16 @@ namespace BowlingTests
             ScoreCard newScoreCards = ScoreCard.GenerteEmptyScoreCards().
                 Add(new BowlingFrame(5, 5));
 
-            Assert.AreEqual(newScoreCards.Frames.Length, 1);
+            Assert.AreEqual(10, Game.GetScore(newScoreCards));
         }
+
         [TestMethod]
         public void GenerateScoreCards_Test()
         {
             Game game = new Game();
 
             ScoreCard emptyScoreCard = ScoreCard.GenerteEmptyScoreCards();
+
             Assert.AreEqual(emptyScoreCard.Frames.Length, 0);
         }
 
@@ -46,7 +48,7 @@ namespace BowlingTests
 
             ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
 
-            int score = Game.GetScore(scoreCard.Frames);
+            int score = Game.GetScore(scoreCard);
             Assert.AreEqual(score, 0);
         }
 
@@ -58,7 +60,7 @@ namespace BowlingTests
             ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
             ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(5, 5));
 
-            int score = Game.GetScore(newScoreCards.Frames);
+            int score = Game.GetScore(newScoreCards);
             Assert.AreEqual(10, score);
         }
 
@@ -70,7 +72,7 @@ namespace BowlingTests
             ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
             ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(4, 5));
 
-            int score = Game.GetScore(newScoreCards.Frames);
+            int score = Game.GetScore(newScoreCards);
 
             Assert.AreEqual(9, score);
         }
@@ -84,9 +86,11 @@ namespace BowlingTests
             new Tuple<int, int>(5, 4),
             new Tuple<int, int>(5, 4));
 
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards().AddRange(frames);
+
             int score = 36;
 
-            Assert.AreEqual(score, Game.GetScore(frames));;
+            Assert.AreEqual(score, Game.GetScore(scoreCard));;
         }
 
         [TestMethod]
@@ -105,8 +109,9 @@ namespace BowlingTests
                 Game.NUM_OF_PINS+6+
                 6+2;
 
-            int calculatedScore = Game.GetScore(frames);
-            Assert.AreEqual(calculatedScore, score);
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -124,8 +129,10 @@ namespace BowlingTests
             score = Game.NUM_OF_PINS +firstTry +
                 Game.NUM_OF_PINS + firstTryAfterSpare +
                 firstTryAfterSpare + Game.NUM_OF_PINS - firstTryAfterSpare;
-            
-            Assert.AreEqual(score, Game.GetScore(frames));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -142,7 +149,9 @@ namespace BowlingTests
                 firstTry + (Game.NUM_OF_PINS - firstTry - 1) +
                 3 +4;
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -159,7 +168,9 @@ namespace BowlingTests
               Game.NUM_OF_PINS + 3 +
               3 + 4;
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
 
@@ -177,7 +188,9 @@ namespace BowlingTests
                 Game.NUM_OF_PINS + 3+
                 3 + 4;
 
-            Assert.AreEqual(score, Game.GetScore(frames));;
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -196,7 +209,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -217,7 +232,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
         
         [TestMethod]
@@ -239,7 +256,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         
@@ -262,7 +281,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
 
@@ -285,7 +306,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
         
         [TestMethod]
@@ -308,7 +331,9 @@ namespace BowlingTests
                 4 + 5;
 
             Trace.WriteLine($"score is {score}");
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -331,7 +356,10 @@ namespace BowlingTests
                 4 + 5;
 
             Trace.WriteLine($"score is {score}");
-            Assert.AreEqual(score, Game.GetScore(frames));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         
@@ -356,7 +384,10 @@ namespace BowlingTests
                 4 + 5;
 
             Trace.WriteLine($"score is {score}");
-            Assert.AreEqual(score, Game.GetScore(frames));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
         
         [TestMethod]
@@ -389,7 +420,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -423,7 +456,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -457,7 +492,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -491,7 +528,9 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
 
-            Assert.AreEqual(score, Game.GetScore(frames));
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         [TestMethod]
@@ -523,8 +562,11 @@ namespace BowlingTests
                 Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
                 Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS;
 
-            Trace.WriteLine($"score is {Game.GetScore(frames)}");
-            Assert.AreEqual(score, Game.GetScore(frames));
+            Trace.WriteLine($"score is {score}");
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
         public static BowlingFrame[] GenerateFrames(params Tuple<int, int>[] tuples)
