@@ -191,17 +191,20 @@ namespace BowlingTests
         public void PlayGame_1_Test()
         {
             BowlingFrame[] frames = new BowlingFrame[0];
-            BowlingFrame[] frames2 = Game.RollNewFrame(frames, 3, 5);
-            Assert.AreEqual(8,Game.GetScore(frames2));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            ScoreCard scoreCard2 = Game.RollNewFrame(scoreCard, 3, 5);
+            Assert.AreEqual(8,Game.GetScore(scoreCard2));
 
 
-            BowlingFrame[] frames3 = Game.RollNewFrame(frames2, 2, 4);
-            Assert.AreEqual(14, Game.GetScore(frames3));
+            ScoreCard scoreCard3 = Game.RollNewFrame(scoreCard2, 2, 4);
+            Assert.AreEqual(14, Game.GetScore(scoreCard3));
 
-            BowlingFrame[] frames4 = Game.RollNewFrame(frames3, 2, 4);
-            Assert.AreEqual(20, Game.GetScore(frames4));
+            ScoreCard scoreCard4 = Game.RollNewFrame(scoreCard3, 2, 4);
+            Assert.AreEqual(20, Game.GetScore(scoreCard4));
 
-            Assert.IsTrue(Game.IsEligibleForAnotherTry(frames4, frames4.Length));
+            Assert.IsTrue(Game.IsEligibleForAnotherTry(scoreCard4));
         }
 
         [TestMethod]

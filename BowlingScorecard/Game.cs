@@ -1,54 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 
 namespace BowlingGame
 {
+    /// <summary>
+    /// General:
+    /// 1. To enforce immutability, the program uses immutable collections:  https://msdn.microsoft.com/en-us/magazine/mt795189.aspx
+    /// </summary>
     public class Game
     {
         public const int EXTRA_ROUNDS = 1;
         public const int NUM_OF_REGULAR_ROUNDS = 10;
         public const int NUM_OF_PINS = 10;
 
-        #region Unused functions
-
-        private BowlingFrame[] GenerteEmptyScoreCards_Forward(int maxArrayLength, int currentIndex)
-        {
-            if (currentIndex == maxArrayLength)
-            {
-                return new BowlingFrame[currentIndex];
-            }
-
-            BowlingFrame[] scoreCard = GenerteEmptyScoreCards(maxArrayLength, currentIndex + 1);
-
-            BowlingFrame newFrame = new BowlingFrame();
-            scoreCard[currentIndex] = newFrame;
-
-            return scoreCard;
-        }
-
-        /// <summary>
-        /// Create an empty score card using for loop
-        /// </summary>
-        private BowlingFrame[] GenerteEmptyScoreCards_UsingLoop()
-        {
-            int maxNumOfRound = NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS;
-            BowlingFrame [] frames = new BowlingFrame[maxNumOfRound];
-            for(int i=0;i< maxNumOfRound; i++)
-            {
-                frames[i] = new BowlingFrame();
-            }
-
-            return frames;
-        }
-        #endregion
-
         /// <summary>
         /// Generates an empty score cards and initiate all the frames (to avoid NULL).
         /// The score card is a short array that doesn't consume a lot of memory, thus it's easier to initiate it this way. 
         /// </summary>
         /// <returns></returns>
-        public static BowlingFrame[] GenerteEmptyScoreCards()
+        private static BowlingFrame[] GenerteEmptyScoreCards()
         {
             return GenerteEmptyScoreCards(Game.NUM_OF_REGULAR_ROUNDS+EXTRA_ROUNDS, Game.NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS);
         }
@@ -73,10 +45,39 @@ namespace BowlingGame
             // The Array.Copy operation is costly in C#, however, it was chosen to exemplify the Functional Programing principle.  
             Array.Copy(scoreCard, newScoreCard, currentIndex - 1);
 
-            BowlingFrame newFrame = new BowlingFrame();
+            BowlingFrame newFrame = new BowlingFrame(0,0);
             newScoreCard[currentIndex-1] = newFrame;
 
             return newScoreCard;
+        }
+
+        public static ScoreCard RollNewFrame(ScoreCard scoreCard, int tryNo1, int tryNo2)
+        {
+            BowlingFrame newframe = new BowlingFrame(tryNo1, tryNo2);
+            if(!BowlingFrame.IsValid(newframe))
+            {
+                throw new IllegalBowlingActionException("Invalid frame");
+            }
+
+            if (scoreCard.Length == NUM_OF_REGULAR_ROUNDS + EXTRA_ROUNDS)
+            {
+                throw new IllegalBowlingActionException("The game exceeds from its maximum number of frames");
+            }
+
+            if (IsEligibleForAnotherTry(scoreCard) == false)
+            {
+                throw new IllegalBowlingActionException("The game has reach to its maximum rounds");
+            }
+
+            scoreCard.Add(new BowlingFrame(tryNo1, tryNo2));
+
+            // Validate the new set of frames
+            if (Game.IsValid(scoreCard) == false)
+            {
+                throw new IllegalBowlingActionException("An invalid frame was added");
+            }
+
+            return scoreCard.Add(new BowlingFrame(tryNo1, tryNo2));
         }
 
         public static BowlingFrame[] RollNewFrame(BowlingFrame[] scoreCard, int tryNo1, int tryNo2)
@@ -91,19 +92,34 @@ namespace BowlingGame
                 throw new IllegalBowlingActionException("The game has reach to its maximum rounds");
             }
             
-            BowlingFrame[] newScoreCard = new BowlingFrame[scoreCard.Length+1];
-            Array.Copy(scoreCard, newScoreCard, scoreCard.Length);
-
-            BowlingFrame newFrame = new BowlingFrame() { Try1 = tryNo1, Try2 = tryNo2 };
-            newScoreCard[newScoreCard.Length - 1] = newFrame;
-
-            // Validate the new frame
-            if (Game.IsValid(newScoreCard) == false)
+            ImmutableArray<BowlingFrame> arrScoreCard = ImmutableArray.Create<BowlingFrame>().AddRange(scoreCard);
+           
+            BowlingFrame newFrame = new BowlingFrame(tryNo1, tryNo2);
+            ImmutableArray<BowlingFrame> newScoreCard = arrScoreCard.Add(newFrame);
+            
+            // Validate the new set of frames
+            if (Game.IsValid(newScoreCard.ToBuilder().ToArray()) == false)
             {
                 throw new IllegalBowlingActionException("An invalid frame");
             }
 
-            return newScoreCard;
+            return newScoreCard.ToBuilder().ToArray();
+        }
+
+        public static bool IsEligibleForAnotherTry(ScoreCard scoreCard)
+        {
+            if (!IsExtraRound(scoreCard.Length))
+                return true;
+
+            FrameTypeEnum previousFrameType = (scoreCard.GetFrame(scoreCard.Length)?.FrameType)?? FrameTypeEnum.Empty;
+
+            // this is an extra frame and the first try is Strike
+            if (previousFrameType == FrameTypeEnum.Spare ||
+                  previousFrameType == FrameTypeEnum.Strike)
+                return true;
+
+            // this is an extra frame, but the score is not Spare
+            return false;
         }
 
         public static bool IsEligibleForAnotherTry(BowlingFrame[] frames, int frameNumber)
@@ -121,6 +137,11 @@ namespace BowlingGame
 
             // this is an extra frame, but the score is not Spare
             return false;
+        }
+
+        public static bool IsValid(ScoreCard scoreCard)
+        {
+            return IsValid(scoreCard.Frames);
         }
 
         public static bool IsValid(BowlingFrame[] frames)
@@ -145,12 +166,21 @@ namespace BowlingGame
             return IsValid(frames, frames.Length - 1);
         }
 
+        /// <summary>
+        /// Validating a set of frames. 
+        /// The validation is based on recursion, to adhere the Functional Programming principles.
+        /// </summary>
         private static bool IsValid(BowlingFrame[] frames, int length)
         {
             if (length <= 0)
                 return true;
 
             return BowlingFrame.IsValid(frames[length]) && IsValid(frames, length - 1);
+        }
+
+        public static int GetScore(ScoreCard scoreCard)
+        {
+            return GetScore(scoreCard.Frames, scoreCard.Length - 1);
         }
 
         public static int GetScore(BowlingFrame[] frames)
@@ -181,7 +211,7 @@ namespace BowlingGame
 
         private static bool IsExtraRound(int length)
         {
-            return (length > NUM_OF_REGULAR_ROUNDS-1);
+            return (length >= NUM_OF_REGULAR_ROUNDS);
         }
 
         private static int CalculateAdditionalScore(BowlingFrame[] frames, int index)
@@ -207,17 +237,12 @@ namespace BowlingGame
             return 0;
         }
 
-        private static FrameTypeEnum GetFrameType(BowlingFrame[] frames, int index)
+        public static FrameTypeEnum GetFrameType(BowlingFrame[] frames, int index)
         {
             if (index < 0 || index >= frames.Length)
                 return FrameTypeEnum.Empty;
 
             return BowlingFrame.GetFramType(frames[index]);
-        }
-
-        public int Roll(BowlingFrame[] frames)
-        {
-            return 0;
         }
 
         //public GameStatusEnum GetGameStatus(BowlingFrame[] frames)
@@ -237,11 +262,12 @@ namespace BowlingGame
         //    return null;
         //}
 
-        public string DisplayScoreCard(BowlingFrame[] frames)
+        public static string DisplayScoreCard(ScoreCard scoreCard)
         {
             StringBuilder result = new StringBuilder();
             int counter = 0;
-            foreach(BowlingFrame frame in frames)
+
+            foreach(BowlingFrame frame in scoreCard.Frames)
             {
                 if (counter % 3 == 0)
                     result.AppendLine(Environment.NewLine);

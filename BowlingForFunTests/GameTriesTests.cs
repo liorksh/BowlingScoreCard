@@ -21,12 +21,22 @@ namespace BowlingTests
         }
 
         [TestMethod]
-        public void GenerateEmptyScoreCards()
+        public void GenerateEmptyScoreCards_Test()
         {
             Game game = new Game();
 
-            BowlingFrame[] frames = Game.GenerteEmptyScoreCards();
-            Assert.AreEqual(frames.Length, Game.NUM_OF_REGULAR_ROUNDS+Game.EXTRA_ROUNDS);
+            ScoreCard newScoreCards = ScoreCard.GenerteEmptyScoreCards().
+                Add(new BowlingFrame(5, 5));
+
+            Assert.AreEqual(newScoreCards.Frames.Length, 1);
+        }
+        [TestMethod]
+        public void GenerateScoreCards_Test()
+        {
+            Game game = new Game();
+
+            ScoreCard emptyScoreCard = ScoreCard.GenerteEmptyScoreCards();
+            Assert.AreEqual(emptyScoreCard.Frames.Length, 0);
         }
 
         [TestMethod]
@@ -34,9 +44,9 @@ namespace BowlingTests
         {
             Game game = new Game();
 
-            BowlingFrame[] frames = Game.GenerteEmptyScoreCards();
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
 
-            int score = Game.GetScore(frames);
+            int score = Game.GetScore(scoreCard.Frames);
             Assert.AreEqual(score, 0);
         }
 
@@ -45,13 +55,11 @@ namespace BowlingTests
         {
             Game game = new Game();
 
-            BowlingFrame[] frames = Game.GenerteEmptyScoreCards();
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+            ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(5, 5));
 
-            frames[0].Try1 = 5;
-            frames[0].Try2 = 5;
-
-            int score = Game.GetScore(frames);
-            Assert.AreEqual(score, 10);
+            int score = Game.GetScore(newScoreCards.Frames);
+            Assert.AreEqual(10, score);
         }
 
         [TestMethod]
@@ -59,13 +67,12 @@ namespace BowlingTests
         {
             Game game = new Game();
 
-            BowlingFrame[] frames = Game.GenerteEmptyScoreCards();
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+            ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(4, 5));
 
-            frames[0].Try1 = 5;
-            frames[0].Try2 = 4;
+            int score = Game.GetScore(newScoreCards.Frames);
 
-            int score = Game.GetScore(frames);
-            Assert.AreEqual(score, 9);
+            Assert.AreEqual(9, score);
         }
 
         [TestMethod]
@@ -526,7 +533,7 @@ namespace BowlingTests
             int counter = 0;
             foreach (Tuple<int, int> t in tuples)
             {
-                frames[counter++] = new BowlingFrame() { Try1 = t.Item1, Try2 = t.Item2 };
+                frames[counter++] = new BowlingFrame(t.Item1, t.Item2);
             }
 
             return frames;

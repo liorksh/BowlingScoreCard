@@ -1,41 +1,26 @@
-﻿using System;
+﻿using BowlingGame;
+using System;
 
 namespace BowlingScorecardApp
 {
-    class Program
+    public class Program
     {
-        /*
-         * 
-         *       private static string QUIT = "-q";
+        private static string QUIT = "-q";
+        private static char DELIMITER = ',';
 
         static void Main(string[] args)
         {
-        1.	Create an empty score card
-2.	Given a score card, score a frame
-3.	Determine if a game is complete - if so, provide the final score
-
-
             Console.WriteLine($"Hello there, welcome to a Bowling game!\nPress Enter to start");
             Console.ReadLine();
 
-            BowlingGame game = new BowlingGame();
-            game.StartGame();
-
-            int droppedPins;
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+          
+            int try1, try2;
 
             // run as long as the game runs
-            while (game.IsGameOver==false)
+            while (Game.IsEligibleForAnotherTry(scoreCard))
             {
                 string input;
-
-                if(game.CurrentRound>game.Frames)
-                {
-                    PrintInformation("You have an extra try :). ");
-                }
-                else
-                {
-                    Console.Write($"Round no. {game.CurrentRound}. ");
-                }
                 
                 Console.WriteLine("Throw the ball and enter the result (-q to quit). Let's Roll!");
                 input = Console.ReadLine();
@@ -46,7 +31,15 @@ namespace BowlingScorecardApp
                     break;
                 }
 
-                if (int.TryParse(input, out droppedPins)==false)
+                if(input.Split(DELIMITER).Length !=2)
+                {
+                    PrintError("Invalid input! Please try again");
+                    continue;
+                }
+
+                
+                if (int.TryParse(input.Split(DELIMITER)[0], out try1)==false ||
+                    int.TryParse(input.Split(DELIMITER)[1], out try2) == false)
                 {
                     PrintError("Invalid number! Please try again");
                     continue;
@@ -54,9 +47,9 @@ namespace BowlingScorecardApp
 
                 try
                 {
-                    game.Roll(droppedPins);
+                    scoreCard = Game.RollNewFrame(scoreCard, try1, try2);
 
-                    if(droppedPins==Game.NUM_OF_PINS)
+                    if(try1==Game.NUM_OF_PINS)
                     {
                         PrintInformation("Strike!!! Well done!");
                     }
@@ -66,15 +59,15 @@ namespace BowlingScorecardApp
                     PrintError($"An error occurred: {ex.Message}");
                 }
        
-                Console.WriteLine($"The score is: {Game.GetScore(frames)}.");
+                Console.WriteLine($"The score is: {Game.GetScore(scoreCard)}.");
             }
 
-            if(Game.GetScore(frames)==game.MaxPossibleScore)
+            if(Game.GetScore(scoreCard) ==Game.NUM_OF_PINS*30)
             {
                 PrintInformation("*** You are a the KING. Big Lebowski - behind you!");
             }
 
-            Console.WriteLine($"\nThe game's frame were:\n{game.PrintResults()}\nPress Enter to exit, goodbye..");
+            Console.WriteLine($"\nThe game's frame were:\n{Game.DisplayScoreCard(scoreCard)}\nPress Enter to exit, goodbye..");
             Console.ReadLine();
         }
 
@@ -90,11 +83,6 @@ namespace BowlingScorecardApp
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.Gray;
-        }
-         */
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World!");
         }
     }
 }
