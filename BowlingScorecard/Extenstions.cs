@@ -27,47 +27,36 @@ namespace BowlingGame
     }
 
     public static class Extenstions
-    {
-        /// <summary>
-        ///  Check the validity of a frame
-        /// </summary>
-        public static bool IsValid(this BowlingFrame frame, int numOfPins)
-        {
-            return frame.Try1>=0 &&
-                frame.Try2>=0 &&
-                ((frame.Try1 + frame.Try2) <= numOfPins);
-        }
-       
-        
-        /// <summary>
-        ///  Print the results of the game.
-        ///// </summary>
-        //public static string PrintResults(this BowlingGame game)
-        //{
-        //    StringBuilder results = new StringBuilder();
-        //    List<BowlingFrame> frames = game.GetGameFrames();
-
-        //    for(int i=0;i< frames.Count; i++)
-        //    {
-        //        results.AppendLine(frames[i]?.PrintFrame());
-        //    }
-            
-        //    return results.ToString();
-        //}
-
+    {       
         /// <summary>
         /// Print frame
         /// </summary>
         public static string PrintFrame(this BowlingFrame frame)
         {
-            FrameTypeEnum frameType = BowlingFrame.GetFramType(frame);
-            if (frameType == FrameTypeEnum.Strike)
-                return "X";
+            if (frame.FrameType == FrameTypeEnum.Strike)
+                return "(X)";
 
-            if (frameType == FrameTypeEnum.Spare)
-                return $"{frame.Try1} /";
+            if (frame.FrameType == FrameTypeEnum.Spare)
+                return $"({frame.Try1}, /)";
 
-            return $"{frame.Try1} | {frame.Try2}";
+            return $"({frame.Try1} , {frame.Try2})";
+        }
+
+        /// <summary>
+        /// An extension method to display the tries in each frame of the game.
+        /// </summary>
+        /// <param name="scoreCard"></param>
+        /// <returns></returns>
+        public static string DisplayScoreCard(this ScoreCard scoreCard)
+        {
+            StringBuilder result = new StringBuilder();
+
+            foreach (BowlingFrame frame in scoreCard.Frames)
+            {
+                result.Append($"{frame.PrintFrame()} ");
+            }
+
+            return result.ToString();
         }
     }
 }

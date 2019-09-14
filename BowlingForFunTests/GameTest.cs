@@ -129,13 +129,14 @@ namespace BowlingTests
               new Tuple<int, int>(5, 2),
               new Tuple<int, int>(5, 2),
               new Tuple<int, int>(5, 3),
-              new Tuple<int, int>(Game.NUM_OF_PINS,0), // Strike
+              new Tuple<int, int>(Game.NUM_OF_PINS, 0), // Strike
               new Tuple<int, int>(5, 5));
 
             ScoreCard scoreCard = new ScoreCard(frames);
             Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
+        #region End game tests
         [TestMethod]
         public void CheckIfReachedToEndGame_1_Test()
         {
@@ -154,7 +155,7 @@ namespace BowlingTests
 
             ScoreCard scoreCard = new ScoreCard(frames);
 
-            Assert.IsTrue(Game.IsEligibleForAnotherTry(scoreCard));
+            Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
         }
 
         [TestMethod]
@@ -189,7 +190,7 @@ namespace BowlingTests
             new Tuple<int, int>(5, 2),
             new Tuple<int, int>(5, 2),
             new Tuple<int, int>(5, 3),
-            new Tuple<int, int>(Game.NUM_OF_PINS,0)); // Strike
+            new Tuple<int, int>(Game.NUM_OF_PINS, 0)); // Strike
 
             ScoreCard scoreCard = new ScoreCard(frames);
 
@@ -259,7 +260,9 @@ namespace BowlingTests
             Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
 
         }
+        #endregion
 
+        #region Play game tests
         [TestMethod]
         public void PlayGame_1_Test()
         {
@@ -268,7 +271,7 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             ScoreCard scoreCard2 = Game.RollNewFrame(scoreCard, 3, 5);
-            Assert.AreEqual(8,Game.GetScore(scoreCard2));
+            Assert.AreEqual(8, Game.GetScore(scoreCard2));
 
 
             ScoreCard scoreCard3 = Game.RollNewFrame(scoreCard2, 2, 4);
@@ -455,12 +458,122 @@ namespace BowlingTests
 
             ScoreCard scoreCard11 = Game.RollNewFrame(scoreCard10, 0, Game.NUM_OF_PINS); // Spare
 
-            ScoreCard scoreCard12 = Game.RollNewFrame(scoreCard11, 2,0); // This frame is valid
+            ScoreCard scoreCard12 = Game.RollNewFrame(scoreCard11, 2, 0); // This frame is valid
 
-            int score = 8 + 8 * 6 + Game.NUM_OF_PINS + 2 ;
+            int score = 8 + 8 * 6 + Game.NUM_OF_PINS + 2;
 
             Trace.WriteLine($"score is {score}");
             Assert.AreEqual(score, Game.GetScore(scoreCard12));
+        }
+
+        #endregion
+
+        [TestMethod]
+        [TestCategory("Full game test")]
+        public void Simpulate_FullGame_1_Test()
+        {
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+            
+            // run as long as the game runs
+            while (Game.IsEligibleForAnotherTry(scoreCard))
+            {
+                Tuple<int, int> tries = GenerateFrame(scoreCard);
+
+                if (BowlingFrame.IsValid(new BowlingFrame(tries.Item1, tries.Item2)) == false)
+                    throw new IllegalBowlingActionException("invalid frame values");
+
+                scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
+            }
+
+            Trace.WriteLine($"score is {Game.GetScore(scoreCard)}");
+
+            if(scoreCard.Length < Game.NUM_OF_REGULAR_ROUNDS)
+                throw new IllegalBowlingActionException("invalid number of rounds");
+
+            bool isGameHasExtraRound = ((scoreCard.Length == Game.NUM_OF_REGULAR_ROUNDS + Game.EXTRA_ROUNDS));
+
+            if (isGameHasExtraRound &&
+                    (scoreCard.GetFrameType(Game.NUM_OF_REGULAR_ROUNDS-1)== FrameTypeEnum.Normal ||
+                    scoreCard.GetFrameType(Game.NUM_OF_REGULAR_ROUNDS-1) == FrameTypeEnum.Empty))
+            {
+                throw new IllegalBowlingActionException("Had an extra round but the last round was not Strike or Spare");
+            }
+
+            if(!isGameHasExtraRound)
+                Assert.IsTrue(scoreCard.Length==Game.NUM_OF_REGULAR_ROUNDS);
+        }
+
+        [TestMethod]
+        [TestCategory("Full game test")]
+        [ExpectedException(typeof(IllegalBowlingActionException))]
+        public void Simpulate_FullGame_2_Test()
+        {
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+
+            // run as long as the game runs
+            for (int i=0;i< Game.NUM_OF_REGULAR_ROUNDS-1;i++)
+            {
+                Tuple<int, int> tries = GenerateFrame(scoreCard);
+
+                if (BowlingFrame.IsValid(new BowlingFrame(tries.Item1, tries.Item2)) == false)
+                    throw new IllegalBowlingActionException("invalid frame values");
+
+                scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
+            }
+
+            // Add the last round
+            scoreCard = Game.RollNewFrame(scoreCard, 0, Game.NUM_OF_PINS);
+
+            Trace.WriteLine($"score is {Game.GetScore(scoreCard)}");
+
+            if ((scoreCard.Length == Game.NUM_OF_REGULAR_ROUNDS) &&
+                    (scoreCard.GetFrameType(Game.NUM_OF_REGULAR_ROUNDS-1) == FrameTypeEnum.Spare ||
+                    scoreCard.GetFrameType(Game.NUM_OF_REGULAR_ROUNDS-1) == FrameTypeEnum.Strike))
+            {
+                throw new IllegalBowlingActionException("Should have another extra round");
+            }
+        }
+
+
+        [TestMethod]
+        [TestCategory("Full game test")]
+        [ExpectedException(typeof(IllegalBowlingActionException))]
+        public void Simpulate_FullGame_3_Test()
+        {
+            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+
+            // Run for 9 rounds, but leave the last round for a fixed input.
+            for (int i = 0; i < Game.NUM_OF_REGULAR_ROUNDS - 1; i++)
+            {
+                Tuple<int, int> tries = GenerateFrame(scoreCard);
+
+                if (BowlingFrame.IsValid(new BowlingFrame(tries.Item1, tries.Item2)) == false)
+                    throw new IllegalBowlingActionException("invalid frame values");
+
+                scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
+            }
+
+            // Add the last round
+            scoreCard = Game.RollNewFrame(scoreCard, Game.NUM_OF_PINS, 0 );
+
+            Trace.WriteLine($"score is {Game.GetScore(scoreCard)}");
+
+            if ((scoreCard.Length == Game.NUM_OF_REGULAR_ROUNDS) &&
+                    (scoreCard.GetFrameType(scoreCard.Length - 1) == FrameTypeEnum.Spare ||
+                    scoreCard.GetFrameType(scoreCard.Length - 1) == FrameTypeEnum.Strike))
+            {
+                throw new IllegalBowlingActionException("Should have another extra round");
+            }
+        }
+
+        private Tuple<int, int> GenerateFrame(ScoreCard scoreCard)
+        {
+            Random rnd = new Random();
+            int try1 = rnd.Next(0, Game.NUM_OF_PINS+1);
+
+            int try2 = (Game.GetFrameType(scoreCard, Game.NUM_OF_REGULAR_ROUNDS) == FrameTypeEnum.Spare) ? 0 : rnd.Next(0, Game.NUM_OF_PINS - try1 + 1);
+
+            return new Tuple<int, int>(try1, try2);
         }
     }
 }

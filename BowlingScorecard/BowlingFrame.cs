@@ -31,12 +31,19 @@ namespace BowlingGame
             FrameType = BowlingFrame.GetFramType(new Tuple<int, int>(Try1, Try2));
         }
 
-        static public FrameTypeEnum GetFramType(BowlingFrame frame)
+        public BowlingFrame(BowlingFrame frame)
         {
-            return GetFramType(new Tuple<int, int>(frame.Try1, frame.Try2));
+            Try1 = frame.Try1;
+            Try2 = frame.Try2;
+            FrameType = frame.FrameType;
         }
 
-        static public FrameTypeEnum GetFramType(Tuple<int,int> tries)
+        //static public FrameTypeEnum GetFramType(BowlingFrame frame)
+        //{
+        //    return GetFramType(new Tuple<int, int>(frame.Try1, frame.Try2));
+        //}
+
+        static private FrameTypeEnum GetFramType(Tuple<int,int> tries)
         {
             int triesSum = tries.Item1 + tries.Item2;
 

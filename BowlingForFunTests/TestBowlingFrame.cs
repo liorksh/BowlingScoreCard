@@ -43,7 +43,6 @@ namespace BowlingTests
         }
 
         [TestMethod]
-        //[ExpectedException(typeof(IllegalBowlingActionException))]
         public void BowlingFrame_IsValid_Test()
         {
             int firstTry = 4;

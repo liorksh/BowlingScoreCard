@@ -42,25 +42,37 @@ namespace BowlingGame
                 AddRange(frames));
         }
 
+        /// <summary>
+        /// Returns a copy of a frame based on its index. If the index is not valid, the method returns NULL.
+        /// The return value is a copy of the original object to ensure it is immutable.
+        /// </summary>
         public BowlingFrame GetFrame(int index)
         {
             if (index < 0 || index >= Frames.Length)
                 return null;
 
-            return Frames[index];
+            return new BowlingFrame(Frames[index]);
         }
 
+        /// <summary>
+        /// Returns the frame type, based on the requested index. If the requested index is invalid, the return value is Empty.
+        /// This method is more efficient than calling GetFrame, as it avoids creation of a new BowlingFrame instance.
+        /// </summary>
+        public FrameTypeEnum GetFrameType(int index)
+        {
+            if (index < 0 || index >= Frames.Length)
+                return FrameTypeEnum.Empty;
+
+            /// This is the inefficient way to return the frame's type.
+            //return (GetFrame(Game.NUM_OF_REGULAR_ROUNDS - 1)?.FrameType) ?? FrameTypeEnum.Empty;
+            return Frames[index].FrameType;
+        }
 
         /// <summary>
-        /// Generates an empty score cards and initiate all the frames (to avoid NULL).
-        /// The score card is a short array that doesn't consume a lot of memory, thus it's easier to initiate it this way. 
+        /// Generates an empty score cards. The score card will include more frames as long as the game continues.
         /// </summary>
-        /// <returns></returns>
         public static ScoreCard GenerteEmptyScoreCards()
         {
-            //ImmutableArray<BowlingFrame>.Builder builder = new ImmutableArray<BowlingFrame>().ToBuilder();
-            //builder.Capacity = Game.NUM_OF_REGULAR_ROUNDS + Game.EXTRA_ROUNDS;
-
             return new ScoreCard(new BowlingFrame[0]);
         }
     }
