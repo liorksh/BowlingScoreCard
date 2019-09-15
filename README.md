@@ -7,6 +7,11 @@ There are three projects:
 2. Bowling game business logic (BowlingScorecard)
 3. Unit tests project (BowlingForFunTests)
 
+The business logic was written based on the Functional Programming concepts:
+* Pure functions. Each function is stateless.
+* Immutable objects and variables: creating new objects in case of change.
+* Trying to avoid loops and use recursions.
+
 ## Main methods
 
 1.	Creating an empty score card by calling a static method:<br>
@@ -22,3 +27,11 @@ There are three projects:
 <br>Calculating the game's score:<br>
 ``public static int GetScore(ScoreCard scoreCard)
 ``
+<br>Get the score of a single frame. If the score is not determied yet (spare or strike), the methid returns null:<br>
+``public static int? GetFrameScore(ScoreCard scoreCard, int index)
+``
+
+## Running the console application
+
+An example for possible output:<br>
+![Application output](/Images/GameSapmle1.PNG)
