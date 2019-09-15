@@ -31,25 +31,26 @@ namespace BowlingScorecardApp
 
                     scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
 
-                    if(tries .Item1== Game.NUM_OF_PINS)
+                    if(tries .Item1== BowlingGameExtenstions.NUM_OF_PINS)
                     {
                         PrintInformation("Strike!!! Well done!");
                     }
+
+                    Console.WriteLine($"The current score is: {Game.GetScore(scoreCard)}.");
+
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     PrintError($"An error occurred: {ex.Message}");
-                }
-       
-                Console.WriteLine($"The score is: {Game.GetScore(scoreCard)}.");
+                }       
             }
-
-            if(Game.GetScore(scoreCard) ==Game.NUM_OF_PINS*30)
+            
+            if (Game.GetScore(scoreCard) ==BowlingGameExtenstions.NUM_OF_PINS*30)
             {
                 PrintInformation("*** You are a the KING. Big Lebowski - behind you!");
             }
 
-            Console.WriteLine($"\nThe game's frame were:\n{scoreCard.DisplayScoreCard()}\nPress Enter to exit, goodbye..");
+            Console.WriteLine($"\nThe game's frame were (score {Game.GetScore(scoreCard)}):\n{scoreCard.DisplayScoreCard()}\n\nPress Enter to exit, goodbye..");
             Console.ReadLine();
         }
 
@@ -81,7 +82,6 @@ namespace BowlingScorecardApp
                     return null;
                 }
 
-
                 if (int.TryParse(input.Split(DELIMITER)[0], out try1) == false ||
                     int.TryParse(input.Split(DELIMITER)[1], out try2) == false)
                 {
@@ -92,9 +92,9 @@ namespace BowlingScorecardApp
             else
             {
                 Random rnd = new Random();
-                try1 = rnd.Next(0, Game.NUM_OF_PINS+1);
+                try1 = rnd.Next(0, BowlingGameExtenstions.NUM_OF_PINS+1);
 
-                try2 = (Game.GetFrameType(scoreCard, Game.NUM_OF_REGULAR_ROUNDS) == FrameTypeEnum.Spare) ? 0 : rnd.Next(0, Game.NUM_OF_PINS - try1 + 1);
+                try2 = (Game.GetFrameType(scoreCard, BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS-1) == FrameTypeEnum.Spare) ? 0 : rnd.Next(0, BowlingGameExtenstions.NUM_OF_PINS - try1 + 1);
             }
 
             return new Tuple<int, int>(try1, try2);

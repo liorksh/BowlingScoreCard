@@ -14,11 +14,6 @@ namespace BowlingGame
         public int Try2 { get; private set; }
         public FrameTypeEnum FrameType { get; private set; }
 
-        public Tuple<int,int> GetTries
-        {
-            get { return new Tuple<int, int>(Try1, Try2); }
-        }
-
         /// <summary>
         /// The constructor sets the variables. From this point, they cannot be changed externally.
         /// </summary>
@@ -28,7 +23,7 @@ namespace BowlingGame
             Try2 = try2;
 
             // Once the frame is set, its type is fixed.
-            FrameType = BowlingFrame.GetFramType(new Tuple<int, int>(Try1, Try2));
+            FrameType = GetFramType(new Tuple<int, int>(Try1, Try2));
         }
 
         public BowlingFrame(BowlingFrame frame)
@@ -38,28 +33,20 @@ namespace BowlingGame
             FrameType = frame.FrameType;
         }
 
-        //static public FrameTypeEnum GetFramType(BowlingFrame frame)
-        //{
-        //    return GetFramType(new Tuple<int, int>(frame.Try1, frame.Try2));
-        //}
-
-        static private FrameTypeEnum GetFramType(Tuple<int,int> tries)
+        private FrameTypeEnum GetFramType(Tuple<int,int> tries)
         {
             int triesSum = tries.Item1 + tries.Item2;
 
-            if (triesSum == 0)
-             return FrameTypeEnum.Empty;
-
-            if (tries.Item1 == Game.NUM_OF_PINS)
+            if (tries.Item1 == BowlingGameExtenstions.NUM_OF_PINS)
                 return FrameTypeEnum.Strike;
 
-            else if (triesSum < Game.NUM_OF_PINS)
+            else if (triesSum < BowlingGameExtenstions.NUM_OF_PINS)
                 return FrameTypeEnum.Normal;
              
             return  FrameTypeEnum.Spare;
         }
 
-        public int Score
+        public int NumOfDroppedPins
         {
             get
             {
@@ -67,12 +54,12 @@ namespace BowlingGame
             }
         }
 
-        public static bool IsValid(BowlingFrame bowlingFrame)
+        public bool IsValid()
         {
-            if (bowlingFrame.Score > Game.NUM_OF_PINS)
+            if (NumOfDroppedPins > BowlingGameExtenstions.NUM_OF_PINS)
                 return false;
 
-            if (bowlingFrame.Try1<0 || bowlingFrame.Try2 < 0)
+            if (Try1<0 || Try2 < 0)
                 return false;
 
             return true;

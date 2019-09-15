@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 namespace BowlingTests
@@ -21,24 +22,13 @@ namespace BowlingTests
         }
 
         [TestMethod]
-        public void GenerateEmptyScoreCards_Test()
-        {
-            Game game = new Game();
-
-            ScoreCard newScoreCards = ScoreCard.GenerteEmptyScoreCards().
-                Add(new BowlingFrame(5, 5));
-
-            Assert.AreEqual(10, Game.GetScore(newScoreCards));
-        }
-
-        [TestMethod]
         public void GenerateScoreCards_Test()
         {
             Game game = new Game();
 
-            ScoreCard emptyScoreCard = ScoreCard.GenerteEmptyScoreCards();
+            ScoreCard emptyScoreCard = Game.GenerteEmptyScoreCards();
 
-            Assert.AreEqual(emptyScoreCard.Frames.Length, 0);
+            Assert.AreEqual(emptyScoreCard.Length, 0);
         }
 
         [TestMethod]
@@ -46,35 +36,49 @@ namespace BowlingTests
         {
             Game game = new Game();
 
-            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
+            ScoreCard scoreCard = Game.GenerteEmptyScoreCards();
 
             int score = Game.GetScore(scoreCard);
             Assert.AreEqual(score, 0);
         }
-
+        
         [TestMethod]
-        public void CalculateScore_OneFrame_Test()
+        public void CalculateScore_OneFrame_2_Test()
         {
             Game game = new Game();
 
-            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
-            ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(5, 5));
+            ScoreCard scoreCards = Game.GenerteEmptyScoreCards().Add(new BowlingFrame(5, 5));
 
-            int score = Game.GetScore(newScoreCards);
-            Assert.AreEqual(10, score);
+            int?[] scores = scoreCards.GetFramesScores();
+            Assert.AreEqual(1, scores.Length);
+
+            Assert.IsNull(scores[0]);
+        }
+             
+
+        [TestMethod]
+        public void CalculateScore_1_Test()
+        {
+            Game game = new Game();
+
+            ScoreCard scoreCards = Game.GenerteEmptyScoreCards().Add(new BowlingFrame(4, 5));
+
+            int score = Game.GetScore(scoreCards);
+
+            Assert.AreEqual(9, score);
         }
 
         [TestMethod]
-        public void CalculateScore1_Test()
+        public void CalculateScore_2_Test()
         {
             Game game = new Game();
 
-            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards();
-            ScoreCard newScoreCards = scoreCard.Add(new BowlingFrame(4, 5));
-
-            int score = Game.GetScore(newScoreCards);
-
-            Assert.AreEqual(9, score);
+            ScoreCard scoreCards = Game.GenerteEmptyScoreCards().Add(new BowlingFrame(4, 5));
+            
+            int?[] scores = scoreCards.GetFramesScores();
+            Assert.AreEqual(1, scores.Length);
+            
+            Assert.AreEqual(9, scores[0]);
         }
 
         [TestMethod]
@@ -86,7 +90,7 @@ namespace BowlingTests
             new Tuple<int, int>(5, 4),
             new Tuple<int, int>(5, 4));
 
-            ScoreCard scoreCard = ScoreCard.GenerteEmptyScoreCards().AddRange(frames);
+            ScoreCard scoreCard = Game.GenerteEmptyScoreCards().AddRange(frames);
 
             int score = 36;
 
@@ -101,12 +105,12 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-            new Tuple<int, int>(firstTry, Game.NUM_OF_PINS - firstTry),
-            new Tuple<int, int>(firstTryAfterSpare, Game.NUM_OF_PINS - firstTryAfterSpare),
+            new Tuple<int, int>(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry),
+            new Tuple<int, int>(firstTryAfterSpare, BowlingGameExtenstions.NUM_OF_PINS - firstTryAfterSpare),
             new Tuple<int, int>(6,2));
 
-            score = Game.NUM_OF_PINS + firstTryAfterSpare+
-                Game.NUM_OF_PINS+6+
+            score = BowlingGameExtenstions.NUM_OF_PINS + firstTryAfterSpare+
+                BowlingGameExtenstions.NUM_OF_PINS+6+
                 6+2;
 
             ScoreCard scoreCard = new ScoreCard(frames);
@@ -122,17 +126,21 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-                new Tuple<int, int>(firstTry, Game.NUM_OF_PINS - firstTry),
-                new Tuple<int, int>(firstTry, Game.NUM_OF_PINS - firstTry),
-                new Tuple<int, int>(firstTryAfterSpare, Game.NUM_OF_PINS - firstTryAfterSpare));
+                new Tuple<int, int>(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry),
+                new Tuple<int, int>(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry),
+                new Tuple<int, int>(firstTryAfterSpare, BowlingGameExtenstions.NUM_OF_PINS - firstTryAfterSpare));
 
-            score = Game.NUM_OF_PINS +firstTry +
-                Game.NUM_OF_PINS + firstTryAfterSpare +
-                firstTryAfterSpare + Game.NUM_OF_PINS - firstTryAfterSpare;
+            score = BowlingGameExtenstions.NUM_OF_PINS + firstTry +
+                BowlingGameExtenstions.NUM_OF_PINS + firstTryAfterSpare;
+                //firstTryAfterSpare + BowlingGameExtenstions.NUM_OF_PINS - firstTryAfterSpare;
 
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.AreEqual(score, Game.GetScore(scoreCard));
+            Assert.AreEqual((BowlingGameExtenstions.NUM_OF_PINS + firstTry), Game.GetFrameScore(scoreCard,0));
+            Assert.AreEqual((BowlingGameExtenstions.NUM_OF_PINS + firstTryAfterSpare), Game.GetFrameScore(scoreCard, 1));
+
+            Assert.IsNull(Game.GetFrameScore(scoreCard,2));
         }
 
         [TestMethod]
@@ -141,12 +149,12 @@ namespace BowlingTests
             int score = 0;
             int firstTry = 8;
             BowlingFrame[] frames = GenerateFrames(
-                new Tuple<int, int>(0, Game.NUM_OF_PINS),
-                new Tuple<int, int>(firstTry, Game.NUM_OF_PINS - firstTry - 1),
+                new Tuple<int, int>(0, BowlingGameExtenstions.NUM_OF_PINS),
+                new Tuple<int, int>(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry - 1),
                 new Tuple<int, int>(3, 4));
 
-            score = Game.NUM_OF_PINS + firstTry +
-                firstTry + (Game.NUM_OF_PINS - firstTry - 1) +
+            score = BowlingGameExtenstions.NUM_OF_PINS + firstTry +
+                firstTry + (BowlingGameExtenstions.NUM_OF_PINS - firstTry - 1) +
                 3 +4;
 
             ScoreCard scoreCard = new ScoreCard(frames);
@@ -160,16 +168,17 @@ namespace BowlingTests
             int score = 0;
             int firstTry = 8;
             BowlingFrame[] frames = GenerateFrames(
-                new Tuple<int, int>(0, Game.NUM_OF_PINS),
-                new Tuple<int, int>(firstTry, Game.NUM_OF_PINS - firstTry),
+                new Tuple<int, int>(0, BowlingGameExtenstions.NUM_OF_PINS),
+                new Tuple<int, int>(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry),
                 new Tuple<int, int>(3, 4));
 
-            score = Game.NUM_OF_PINS + firstTry +
-              Game.NUM_OF_PINS + 3 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + firstTry +
+              BowlingGameExtenstions.NUM_OF_PINS + 3 +
               3 + 4;
 
             ScoreCard scoreCard = new ScoreCard(frames);
-
+                        
+            Assert.AreEqual(score, scoreCard.GetFramesScores().Sum());
             Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
 
@@ -180,12 +189,12 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-              new Tuple<int, int>(Game.NUM_OF_PINS,0),
-              new Tuple<int, int>(0, Game.NUM_OF_PINS),
+              new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS,0),
+              new Tuple<int, int>(0, BowlingGameExtenstions.NUM_OF_PINS),
               new Tuple<int, int>(3, 4));
 
-            score = Game.NUM_OF_PINS + 0 + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + 3+
+            score = BowlingGameExtenstions.NUM_OF_PINS + 0 + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + 3+
                 3 + 4;
 
             ScoreCard scoreCard = new ScoreCard(frames);
@@ -198,11 +207,11 @@ namespace BowlingTests
         {
             int score = 0;
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(1,5),
              new Tuple<int, int>(3, 4));
             
-            score = Game.NUM_OF_PINS + 1+5+
+            score = BowlingGameExtenstions.NUM_OF_PINS + 1+5+
                 1+5+
                 3+4;
 
@@ -220,13 +229,13 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(3, 5),
              new Tuple<int, int>(3, 4));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + 3+
-                Game.NUM_OF_PINS + 3+ 5 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 3+
+                BowlingGameExtenstions.NUM_OF_PINS + 3+ 5 +
                 3 + 5 +
                 3 + 4;
 
@@ -242,15 +251,15 @@ namespace BowlingTests
         {
             int score = 0;
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(3, 5),
              new Tuple<int, int>(3, 4));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS+
-                Game.NUM_OF_PINS+ Game.NUM_OF_PINS+3+
-                Game.NUM_OF_PINS + 3 +5 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS+
+                BowlingGameExtenstions.NUM_OF_PINS+ BowlingGameExtenstions.NUM_OF_PINS+3+
+                BowlingGameExtenstions.NUM_OF_PINS + 3 +5 +
                 3 +5 +
                 3+ 4;
 
@@ -263,27 +272,30 @@ namespace BowlingTests
 
         
         [TestMethod]
-        public void PlayFrames_ThreeConsecutiveStrikes__2_Test()
+        public void PlayFrames_ThreeConsecutiveStrikes_2_Test()
         {
             int score = 0;
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(5,0),
              new Tuple<int, int>(5, 0));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 +
-                Game.NUM_OF_PINS + 5 + 0 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 0 +
                 5 +
                 5;
 
             Trace.WriteLine($"score is {score}");
 
             ScoreCard scoreCard = new ScoreCard(frames);
-
             Assert.AreEqual(score, Game.GetScore(scoreCard));
+
+            Assert.AreEqual(30, Game.GetFrameScore(scoreCard, 0));
+            Assert.AreEqual(25, Game.GetFrameScore(scoreCard, 1));
+
         }
 
 
@@ -292,15 +304,15 @@ namespace BowlingTests
         {
             int score = 0;
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(0, 5),
              new Tuple<int, int>(5, 0));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 0 +
-                Game.NUM_OF_PINS + 0 + 5 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 0 +
+                BowlingGameExtenstions.NUM_OF_PINS + 0 + 5 +
                 5 +
                 5;
 
@@ -310,7 +322,45 @@ namespace BowlingTests
 
             Assert.AreEqual(score, Game.GetScore(scoreCard));
         }
-        
+        /*------------ Test frames calculation ----------------- */
+        [TestMethod]
+        public void PlayFrames_TestFrameScore_AfterStrikes_1_Test()
+        {
+            BowlingFrame[] frames = GenerateFrames(
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+
+            Assert.IsNull(scoreCard.GetFrameScore(0));
+
+            Assert.IsNull(scoreCard.GetFrameScore(1));
+        }
+
+        [TestMethod]
+        public void PlayFrames_TestFrameScore_AfterStrikes_2_Test()
+        {
+            int score = 0;
+            BowlingFrame[] frames = GenerateFrames(
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(5, 3));
+
+            Trace.WriteLine($"score is {score}");
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+               BowlingGameExtenstions.NUM_OF_PINS +5 + 3 +
+               5 + 3;
+
+            Assert.AreEqual(10+10+5, scoreCard.GetFrameScore(0));
+            Assert.AreEqual(10 + 5+3, scoreCard.GetFrameScore(1));
+            Assert.AreEqual(score, scoreCard.GetFramesScores().Sum());
+            Assert.AreEqual(score, Game.GetScore(scoreCard));
+        }
+
+        /*------------ End: Test frames calculation ----------------- */
+
         [TestMethod]
         public void PlayFrames_StrikeAfterSpare_Test()
         {
@@ -319,14 +369,14 @@ namespace BowlingTests
 
             BowlingFrame[] frames = GenerateFrames(
              new Tuple<int, int>(0, 5),
-             new Tuple<int, int>(tryDroppedPins, Game.NUM_OF_PINS - tryDroppedPins),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(tryDroppedPins, BowlingGameExtenstions.NUM_OF_PINS - tryDroppedPins),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(5, 4),
              new Tuple<int, int>(4, 5));
 
             score = 5 +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + 5 + 4 +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 4 +
                 5 + 4 +
                 4 + 5;
 
@@ -334,6 +384,10 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.AreEqual(score, Game.GetScore(scoreCard));
+            Assert.AreEqual(20, Game.GetFrameScore(scoreCard,1));
+            Assert.AreEqual(19, Game.GetFrameScore(scoreCard, 2));
+
+
         }
 
         [TestMethod]
@@ -344,14 +398,14 @@ namespace BowlingTests
 
             BowlingFrame[] frames = GenerateFrames(
              new Tuple<int, int>(0, 5),
-             new Tuple<int, int>(tryDroppedPins, Game.NUM_OF_PINS - tryDroppedPins),
-             new Tuple<int, int>(0, Game.NUM_OF_PINS),
+             new Tuple<int, int>(tryDroppedPins, BowlingGameExtenstions.NUM_OF_PINS - tryDroppedPins),
+             new Tuple<int, int>(0, BowlingGameExtenstions.NUM_OF_PINS),
              new Tuple<int, int>(5, 4),
              new Tuple<int, int>(4, 5));
 
             score = 5 +
-                Game.NUM_OF_PINS + 0 +
-                Game.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 0 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 +
                 5 + 4 +
                 4 + 5;
 
@@ -369,17 +423,17 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0), 
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-             new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0), 
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+             new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
              new Tuple<int, int>(5, 4),
              new Tuple<int, int>(4, 5));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 + 
-                Game.NUM_OF_PINS + 5 + 4 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 + 
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 4 +
                 5 + 4 +
                 4 + 5;
 
@@ -396,25 +450,25 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
                new Tuple<int, int>(5, 4),
                new Tuple<int, int>(4, 5));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 +
-                Game.NUM_OF_PINS + 5 + 4 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 4 +
                 5 + 4 +
                 4 + 5;
 
@@ -431,26 +485,26 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
                new Tuple<int, int>(5, 4),
                new Tuple<int, int>(5, 5),
                new Tuple<int, int>(5, 0));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 +
-                Game.NUM_OF_PINS + 5 + 4 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 4 +
                 5 + 4 +
                 5 + 5 + 5;
 
@@ -459,6 +513,8 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.AreEqual(score, Game.GetScore(scoreCard));
+            Assert.AreEqual(15, Game.GetFrameScore(scoreCard, BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS-1));
+
         }
 
         [TestMethod]
@@ -467,28 +523,28 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
                new Tuple<int, int>(5, 4),
-               new Tuple<int, int>(Game.NUM_OF_PINS,0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS,0),
                new Tuple<int, int>(5, 3));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 +
-                Game.NUM_OF_PINS + 5 + 4 +
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 4 +
                 5 + 4 +
-                Game.NUM_OF_PINS + 5+3;
+                BowlingGameExtenstions.NUM_OF_PINS + 5+3;
 
             Trace.WriteLine($"score is {score}");
 
@@ -503,28 +559,28 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
                new Tuple<int, int>(5, 3));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + 5 +
-                Game.NUM_OF_PINS + 5 + 3;
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + 5 +
+                BowlingGameExtenstions.NUM_OF_PINS + 5 + 3;
 
             Trace.WriteLine($"score is {score}");
 
@@ -539,34 +595,36 @@ namespace BowlingTests
             int score = 0;
 
             BowlingFrame[] frames = GenerateFrames(
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, 0),
-               new Tuple<int, int>(Game.NUM_OF_PINS, Game.NUM_OF_PINS));
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0),
+               new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, BowlingGameExtenstions.NUM_OF_PINS));
 
-            score = Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS +
-                Game.NUM_OF_PINS + Game.NUM_OF_PINS + Game.NUM_OF_PINS;
+            score = BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS +
+                BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS + BowlingGameExtenstions.NUM_OF_PINS;
 
             Trace.WriteLine($"score is {score}");
 
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.AreEqual(score, Game.GetScore(scoreCard));
+            Assert.AreEqual(30, Game.GetFrameScore(scoreCard, BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS-1));
+
         }
 
         public static BowlingFrame[] GenerateFrames(params Tuple<int, int>[] tuples)
