@@ -12,7 +12,8 @@ namespace BowlingGame
         Empty=0,
         Normal,
         Spare,
-        Strike
+        Strike,
+        BonusFrame  
     }
 
     /// <summary>

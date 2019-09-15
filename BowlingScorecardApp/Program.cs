@@ -37,7 +37,6 @@ namespace BowlingScorecardApp
                     }
 
                     Console.WriteLine($"The current score is: {Game.GetScore(scoreCard)}.");
-
                 }
                 catch (Exception ex)
                 {
@@ -50,7 +49,7 @@ namespace BowlingScorecardApp
                 PrintInformation("*** You are a the KING. Big Lebowski - behind you!");
             }
 
-            Console.WriteLine($"\nThe game's frame were (score {Game.GetScore(scoreCard)}):\n{scoreCard.DisplayScoreCard()}\n\nPress Enter to exit, goodbye..");
+            Console.WriteLine($"\nThe game's frames were (score {Game.GetScore(scoreCard)}):\n{scoreCard.DisplayScoreCard()}\n\nPress Enter to exit, goodbye..");
             Console.ReadLine();
         }
 

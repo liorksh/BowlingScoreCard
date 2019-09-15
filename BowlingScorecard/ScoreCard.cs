@@ -5,6 +5,9 @@ using System.Text;
 
 namespace BowlingGame
 {
+    /// <summary>
+    /// This class manages the scorecard frames as immutable collection.
+    /// </summary>
     public class ScoreCard
     {
         // Hold the frames a private list, which is not accessible externally.
@@ -12,6 +15,9 @@ namespace BowlingGame
 
         public int Length { get { return (Frames == null) ? 0 : Frames.Length; } }
 
+        /// <summary>
+        /// To enforce immutability, this method creates a copy of the array and keeps it
+        /// </summary>
         public ScoreCard(BowlingFrame[] frames)
         {
             // copy the array into a mutable array, to avoid any changes of the frames' values (by-ref);
@@ -40,8 +46,8 @@ namespace BowlingGame
         }
 
         /// <summary>
-        /// Create a new score card with additional new frame.
-        /// Copy the existing frames and add the new ones.
+        /// Create a new scorecard with the additional new frame.
+        /// Copy the existing frames and adds the new ones.
         /// </summary>
         public ScoreCard Add(BowlingFrame frame)
         {
@@ -51,8 +57,8 @@ namespace BowlingGame
         }
 
         /// <summary>
-        /// Create a new score card with additional new frames.
-        /// Copy the existing frames and add the new ones.
+        /// Create a new scorecard with the additional new frames.
+        /// Copy the existing frames and adds the new ones.
         /// </summary>
         public ScoreCard AddRange(BowlingFrame[] newFrames)
         {
@@ -86,7 +92,8 @@ namespace BowlingGame
         }
 
         /// <summary>
-        /// Generates an empty score cards. The score card will include more frames as long as the game continues.
+        /// Generates an empty score cards. 
+        /// The scorecard will include more frames as long as the game continues.
         /// </summary>
         public static ScoreCard GenerteEmptyScoreCards()
         {
@@ -94,15 +101,15 @@ namespace BowlingGame
         }
 
         #region Calculate Scores
+
+        /// <summary>
+        /// Returns the score of a given frame if exists, otherwise return null.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public int? GetFrameScore(int index)
         {
             return BowlingGameExtenstions.GetItemFromArray<int?>(GetFramesScores(), index);
-            
-            // The previous way to return a value:
-            //if (index < 0 || index >= Frames.Length)
-            //    return null;
-
-            //return GetFramesScores()[index];
         }
 
         /// <summary>
@@ -113,34 +120,41 @@ namespace BowlingGame
         {
             int?[] scores = new int?[Frames.Length];
 
+            // fill the scores array, until the last legit round
             for (int i = 0; i < Frames.Length && i < BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS; i++)
             {
+                // Scenario 1: a simple frame
                 if (Frames[i].FrameType == FrameTypeEnum.Normal)
                 {
                     scores[i] = Frames[i].NumOfDroppedPins;
                 }
+                // Scenario 2: Handle spare: check if the subsequent frame exists, only then calculate the score of this frame
                 else if (Frames[i].FrameType == FrameTypeEnum.Spare && 
                     BowlingGameExtenstions.IsIndexExists<BowlingFrame>(Frames, i + 1))
                 {
                     scores[i] = ((GetFrame(i + 1)?.Try1) ?? 0) + Frames[i].NumOfDroppedPins;
                 }
+                // Scenario 3: Handle two consecutive strikes (check if there is a frame in the subsequent throw after the second strike).
+                // if not - do not calculate the score of this frame
                 else if (Frames[i].FrameType == FrameTypeEnum.Strike &&
                     GetFrameType(i + 1) == FrameTypeEnum.Strike &&
                     BowlingGameExtenstions.IsIndexExists<BowlingFrame>(Frames, i + 2))
                 {
                     scores[i] = ((GetFrame(i + 1)?.Try1) ?? 0) + ((GetFrame(i + 2)?.Try1) ?? 0) + Frames[i].NumOfDroppedPins;
                 }
+                // Scenario 4: Handle one strikes: check if the subsequent frame exists, only then calculate the score of this frame
                 else if (Frames[i].FrameType == FrameTypeEnum.Strike &&
                     GetFrameType(i + 1) != FrameTypeEnum.Strike &&
                    BowlingGameExtenstions.IsIndexExists<BowlingFrame>(Frames, i + 1))
                 {
                     scores[i] = ((GetFrame(i + 1)?.Try1) ?? 0) + ((GetFrame(i + 1)?.Try2) ?? 0) + Frames[i].NumOfDroppedPins;
                 }
+                // Scenario 5: default (not a realistic scenario (unless the Frames includes an invalid items or the loop is overrun)
                 else
                     scores[i] = null;
             }
 
-            // Handle the edge case when the last round is Strike.
+            // Handle the edge case when the last round is Strike (since there scenario no. 3 doesn't handle it).
             if(Frames.Length == (BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + BowlingGameExtenstions.EXTRA_ROUNDS))
             {
                 if (GetFrameType(BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS - 1) == FrameTypeEnum.Strike)

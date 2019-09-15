@@ -13,7 +13,7 @@ namespace BowlingTests
         public void BowlingFrameState_SpareTest()
         {
             int firstTry = 4;
-            BowlingFrame frame = new BowlingFrame(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry);
+            BowlingFrame frame = new BowlingFrame(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry, FrameTypeEnum.Spare);
 
             Assert.AreEqual(FrameTypeEnum.Spare, frame.FrameType);                        
          }
@@ -21,7 +21,7 @@ namespace BowlingTests
         [TestMethod]
         public void BowlingFrameState_NormalTest()
         {
-            BowlingFrame frame = new BowlingFrame(3,6);
+            BowlingFrame frame = new BowlingFrame(3,6, FrameTypeEnum.Normal);
             
             Assert.AreEqual(FrameTypeEnum.Normal, frame.FrameType);
         }
@@ -29,7 +29,7 @@ namespace BowlingTests
         [TestMethod]
         public void BowlingFrameState_Strike1_Test()
         {
-            BowlingFrame frame = new BowlingFrame(BowlingGameExtenstions.NUM_OF_PINS, 0);
+            BowlingFrame frame = new BowlingFrame(BowlingGameExtenstions.NUM_OF_PINS, 0 , FrameTypeEnum.Strike);
             
             Assert.AreEqual(FrameTypeEnum.Strike, frame.FrameType);
         }
@@ -37,7 +37,7 @@ namespace BowlingTests
         [TestMethod]
         public void BowlingFrameState_Spare2_Test()
         {
-            BowlingFrame frame = new BowlingFrame(0, BowlingGameExtenstions.NUM_OF_PINS);
+            BowlingFrame frame = new BowlingFrame(0, BowlingGameExtenstions.NUM_OF_PINS, FrameTypeEnum.Spare);
             
             Assert.AreEqual(FrameTypeEnum.Spare, frame.FrameType);
         }
@@ -46,7 +46,7 @@ namespace BowlingTests
         public void BowlingFrame_IsValid_Test()
         {
             int firstTry = 4;
-            BowlingFrame frame = new BowlingFrame(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry+2);
+            BowlingFrame frame = new BowlingFrame(firstTry, BowlingGameExtenstions.NUM_OF_PINS - firstTry+2, FrameTypeEnum.Normal);
 
             Assert.IsFalse(frame.IsValid());
         }

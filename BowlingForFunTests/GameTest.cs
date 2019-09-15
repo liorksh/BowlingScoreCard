@@ -137,6 +137,27 @@ namespace BowlingTests
             Assert.AreEqual(124, Game.GetScore(scoreCard));
         }
 
+        [TestMethod]
+        public void LegealLastRound_Strike_2_Test()
+        {
+            BowlingFrame[] frames = GameTriesTests.GenerateFrames(
+              new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0), //20
+              new Tuple<int, int>(5, 5), //15
+              new Tuple<int, int>(5, 5), //15
+              new Tuple<int, int>(5, 5), //15
+              new Tuple<int, int>(5, 3), // 8
+              new Tuple<int, int>(5, 4), // 9
+              new Tuple<int, int>(5, 2), // 7
+              new Tuple<int, int>(5, 2), // 7
+              new Tuple<int, int>(5, 3), // 8
+              new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, 0), // Strike // 30
+              new Tuple<int, int>(BowlingGameExtenstions.NUM_OF_PINS, BowlingGameExtenstions.NUM_OF_PINS));
+
+            ScoreCard scoreCard = new ScoreCard(frames);
+            Assert.IsTrue(Game.IsValid(scoreCard));
+            Assert.AreEqual(134, Game.GetScore(scoreCard));
+        }
+
         #region End game tests
         [TestMethod]
         public void CheckIfReachedToEndGame_1_Test()
@@ -157,6 +178,7 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -176,6 +198,7 @@ namespace BowlingTests
 
             ScoreCard scoreCard = new ScoreCard(frames);
             Assert.IsTrue(Game.IsEligibleForAnotherTry(scoreCard));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -217,6 +240,7 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -237,6 +261,7 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -259,7 +284,7 @@ namespace BowlingTests
             ScoreCard scoreCard = new ScoreCard(frames);
 
             Assert.IsFalse(Game.IsEligibleForAnotherTry(scoreCard));
-
+            Assert.IsFalse(Game.IsValid(scoreCard));
         }
         #endregion
 
@@ -291,6 +316,7 @@ namespace BowlingTests
             Assert.AreEqual(42, Game.GetScore(scoreCard6));
 
             Assert.IsTrue(Game.IsEligibleForAnotherTry(scoreCard5));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -442,6 +468,7 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
             Assert.AreEqual(score, Game.GetScore(scoreCard12));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         [TestMethod]
@@ -474,6 +501,7 @@ namespace BowlingTests
 
             Trace.WriteLine($"score is {score}");
             Assert.AreEqual(score, Game.GetScore(scoreCard12));
+            Assert.IsTrue(Game.IsValid(scoreCard));
         }
 
         #endregion
@@ -488,12 +516,7 @@ namespace BowlingTests
             while (Game.IsEligibleForAnotherTry(scoreCard))
             {
                 Tuple<int, int> tries = GenerateFrame(scoreCard);
-
-                BowlingFrame newFrame = new BowlingFrame(tries.Item1, tries.Item2);
-
-                if (newFrame.IsValid() == false)
-                    throw new IllegalBowlingActionException("invalid frame values");
-
+                
                 scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
             }
 
@@ -527,11 +550,6 @@ namespace BowlingTests
             {
                 Tuple<int, int> tries = GenerateFrame(scoreCard);
 
-                BowlingFrame newFrame = new BowlingFrame(tries.Item1, tries.Item2);
-
-                if (newFrame.IsValid() == false)
-                    throw new IllegalBowlingActionException("invalid frame values");
-
                 scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
             }
 
@@ -560,12 +578,7 @@ namespace BowlingTests
             for (int i = 0; i < BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS - 1; i++)
             {
                 Tuple<int, int> tries = GenerateFrame(scoreCard);
-
-                BowlingFrame newFrame = new BowlingFrame(tries.Item1, tries.Item2);
-
-                if (newFrame.IsValid() == false)
-                    throw new IllegalBowlingActionException("invalid frame values");
-
+                
                 scoreCard = Game.RollNewFrame(scoreCard, tries.Item1, tries.Item2);
             }
 
@@ -582,6 +595,11 @@ namespace BowlingTests
             }
         }
 
+        /// <summary>
+        /// This method generates Tuple<int, int>
+        /// </summary>
+        /// <param name="scoreCard"></param>
+        /// <returns></returns>
         private Tuple<int, int> GenerateFrame(ScoreCard scoreCard)
         {
             Random rnd = new Random();

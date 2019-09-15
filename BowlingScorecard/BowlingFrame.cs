@@ -5,7 +5,7 @@ using System.Text;
 namespace BowlingGame
 {
     /// <summary>
-    /// A container of a frame. Doesn't have logic inside, since the logic is set by the Game.
+    /// A container of a frame. Doesn't have any logic inside, since the logic is set by the Game.
     /// </summary>
     public class BowlingFrame
     {
@@ -13,17 +13,18 @@ namespace BowlingGame
         public int Try1 { get; private set; }
         public int Try2 { get; private set; }
         public FrameTypeEnum FrameType { get; private set; }
+        public int NumOfDroppedPins {  get{  return Try1 + Try2; }    }
 
         /// <summary>
         /// The constructor sets the variables. From this point, they cannot be changed externally.
         /// </summary>
-        public BowlingFrame(int try1, int try2)
+        public BowlingFrame(int try1, int try2, FrameTypeEnum frameType)
         {
             Try1 = try1;
             Try2 = try2;
 
             // Once the frame is set, its type is fixed.
-            FrameType = GetFramType(new Tuple<int, int>(Try1, Try2));
+            FrameType = frameType;
         }
 
         public BowlingFrame(BowlingFrame frame)
@@ -32,31 +33,11 @@ namespace BowlingGame
             Try2 = frame.Try2;
             FrameType = frame.FrameType;
         }
-
-        private FrameTypeEnum GetFramType(Tuple<int,int> tries)
-        {
-            int triesSum = tries.Item1 + tries.Item2;
-
-            if (tries.Item1 == BowlingGameExtenstions.NUM_OF_PINS)
-                return FrameTypeEnum.Strike;
-
-            else if (triesSum < BowlingGameExtenstions.NUM_OF_PINS)
-                return FrameTypeEnum.Normal;
-             
-            return  FrameTypeEnum.Spare;
-        }
-
-        public int NumOfDroppedPins
-        {
-            get
-            {
-                return Try1 + Try2;
-            }
-        }
-
+       
         public bool IsValid()
         {
-            if (NumOfDroppedPins > BowlingGameExtenstions.NUM_OF_PINS)
+            if (NumOfDroppedPins > BowlingGameExtenstions.NUM_OF_PINS &&
+                FrameType!= FrameTypeEnum.BonusFrame)
                 return false;
 
             if (Try1<0 || Try2 < 0)

@@ -7,34 +7,46 @@ using System.Linq;
 namespace BowlingGame
 {
     /// <summary>
-    /// General:
-    /// This class manages a bowling game. 
-    /// The game plays are managed in the ScoreCard object.
+    /// This class manages a bowling game. The game's frames and score are managed in the ScoreCard object.
+    /// This class do not have any members, it's only purpose is to activate and run scorecard operations.
     /// </summary>
     public class Game
     {
+        // private contractor to avoid creation of Game instances. 
+        private Game() { }
+
+        /// <summary>
+        /// Generates an empty scorecard
+        /// </summary>
+        /// <returns></returns>
         public static ScoreCard GenerteEmptyScoreCards()
         {
             return ScoreCard.GenerteEmptyScoreCards();
         }
 
+        /// <summary>
+        /// Rolls a new frame and returns a new instance of the scorecard
+        /// </summary>
         public static ScoreCard RollNewFrame(ScoreCard scoreCard, int tryNo1, int tryNo2)
         {
-            return RollNewFrame(scoreCard, new BowlingFrame(tryNo1, tryNo2));
-        }
+            // creates a new frame (calculate its type based on the tries and the number of rounds (scorecard's length).
+            BowlingFrame newFrame = new BowlingFrame(tryNo1, tryNo2, 
+                GetFrameType(tryNo1, tryNo2, scoreCard.Length));
 
-        public static ScoreCard RollNewFrame(ScoreCard scoreCard, BowlingFrame newFrame)
-        {
+            // Check the validity of the new frame
             if (!newFrame.IsValid())
             {
                 throw new IllegalBowlingActionException("Invalid frame");
             }
 
+            // Ensure the scorecard is eligible or another frame, otherwise, an error is thrown
             if (IsEligibleForAnotherTry(scoreCard) == false)
             {
                 throw new IllegalBowlingActionException("The game has reach to its maximum rounds");
             }
 
+            // Add the new frame to the scorecard and returns a new instance of a scorecard.
+            // The goal is to keep the instances immutable.
             ScoreCard newScoreCard = scoreCard.Add(newFrame);
 
             // Validate the new set of frames
@@ -44,48 +56,65 @@ namespace BowlingGame
             }
             
             return newScoreCard;
+
+            // Inner functions that returns the frame's type based on the number of round or the dropped pins.
+            FrameTypeEnum GetFrameType(int item1, int item2, int count)
+            {
+                if (count == BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS)
+                    return FrameTypeEnum.BonusFrame;
+                if ((item1) == BowlingGameExtenstions.NUM_OF_PINS)
+                    return FrameTypeEnum.Strike;
+                if ((item1 + item2) == BowlingGameExtenstions.NUM_OF_PINS)
+                    return FrameTypeEnum.Spare;
+
+                return FrameTypeEnum.Normal;
+            }
         }
 
         /// <summary>
         /// The method indicates whether the game is over or not.
         /// </summary>
-        /// <param name="scoreCard"></param>
-        /// <returns></returns>
         public static bool IsEligibleForAnotherTry(ScoreCard scoreCard)
         {
+            // if the scorecard already "utilized" an extra round, then an additional round is not allowed.
             if (IsIncludeExtraRound(scoreCard.Length))
                 return false;
 
+            // if the round falls under the regular rounds, then it is a valid round
             if (IsInNormalRounds(scoreCard.Length))
                 return true;
             
-            // Get the type of the last round
+            // If reached to this condition, then it is an extra round; thus, gets the type of the last legit round
             FrameTypeEnum previousFrameType = scoreCard.GetFrameType(BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS-1);
 
-            // this is an extra frame and the first try is Strike
+            // Ensures the previous frame (which is the last regular round) falls under the category of strike or spare
             if (previousFrameType == FrameTypeEnum.Spare ||
                   previousFrameType == FrameTypeEnum.Strike)
                 return true;
 
-            // this is an extra frame, but the score is not Spare
+            // This is an extra frame, but the score is not spare or strike, therefore another round is not legit.
             return false;
         }
         
+        /// <summary>
+        /// Validates the scorecard.
+        /// </summary>
         public static bool IsValid(ScoreCard scoreCard)
         {
+            // Check if the number of frames has exceeded the maximum allowed.
             if (IsBeyondExtraRound(scoreCard.Length))
             {
                 return false;
             }
 
-            // validate the extra round
-            if (scoreCard.Length == BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS+ BowlingGameExtenstions.EXTRA_ROUNDS)
+            // Validates the extra round
+            if (scoreCard.Length == BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + BowlingGameExtenstions.EXTRA_ROUNDS)
             {
                 int currentFrameIndex = scoreCard.Length - 1;
                 // get the frame's type of the previous round.
                 FrameTypeEnum previousFrameType = GetFrameType(scoreCard, currentFrameIndex - 1);
 
-                // if the last round is Spare, hen having a second try in the extra round is an invalid move.
+                // if the last round is Spare, then having a second try in the extra round is an invalid move.
                 if(previousFrameType == FrameTypeEnum.Spare &&
                     scoreCard.GetFrame(currentFrameIndex).Try2 > 0)
                 {
@@ -93,107 +122,56 @@ namespace BowlingGame
                 }
             }
 
-            return IsValid(scoreCard, scoreCard.Length - 1);
+            // validate rest of the frames 
+            return AreFramesValid(scoreCard, scoreCard.Length - 1);
         }
 
         /// <summary>
         /// Validating a set of frames. 
         /// The validation is based on recursion, to adhere the Functional Programming principles.
         /// </summary>
-        private static bool IsValid(ScoreCard scoreCards, int length)
+        private static bool AreFramesValid(ScoreCard scoreCards, int length)
         {
+            // if the scorecard is empty - it is valid.
             if (length <= 0)
                 return true;
 
-            return (scoreCards.GetFrame(length)?.IsValid()??false) && IsValid(scoreCards, length - 1);
+            // return the validity status of the current frames and the rest of the following frames.
+            return (scoreCards.GetFrame(length)?.IsValid()??false) && 
+                AreFramesValid(scoreCards, length - 1);
         }
-
+        
         #region Score calculation methods
+        /// <summary>
+        /// Returns the current score of a given scorecard
+        /// </summary>
         public static int GetScore(ScoreCard scoreCard)
         {
+            // Receives an array of all frames' scores and summarize it
             return scoreCard.GetFramesScores().Sum().Value;
-
-            // Deprecated way to calculate the score
-            //return GetScore(scoreCard, scoreCard.Length - 1);
         }
 
-        // Calculate the Game's score backwards, by checking the values of the previous frames.
-        // This approach is not accurate enough, as it changes the score of frames that were already completed;
-        // thus, it provide inaccurate scores when the frame is strike or spare.
-        //private static int GetScore(ScoreCard scoreCard, int index)
-        //{
-        //    if (index < 0 || index>= scoreCard.Length)
-        //        return 0;
-
-        //    int additionalScore;
-        //    int score = GetFrameDroppedPins(scoreCard, index) + GetScore(scoreCard, index - 1);
-
-        //    additionalScore = CalculateAdditionalScore(scoreCard, index);
-
-        //    return score + additionalScore;
-        //}
-
         /// <summary>
-        /// This method returns the additional score due to Spare or Strikes.
-        /// This calculation is going backwards.
-        ///// </summary>
-        //private static int CalculateAdditionalScore(ScoreCard scoreCard, int index)
-        //{
-        //    FrameTypeEnum previousFrameType = GetFrameType(scoreCard, index - 1);
-
-        //    if (previousFrameType == FrameTypeEnum.Spare)
-        //        return scoreCard.GetFrame(index).Try1;
-
-        //    if (previousFrameType == FrameTypeEnum.Strike)
-        //    {
-        //        int additonalScore = scoreCard.GetFrame(index).Try1 + scoreCard.GetFrame(index).Try2;
-        //        int scoreIfPreviousWasStrike = 0;
-
-        //        // Check if the previous-previous round was Strike. If yes, need to add the first try to the score,
-        //        // since a Strike rule is to add the consecutive two tries. 
-        //        if ((GetFrameType(scoreCard, index - 2) == FrameTypeEnum.Strike))
-        //        {
-        //            scoreIfPreviousWasStrike = scoreCard.GetFrame(index).Try1;
-        //        }
-
-        //        // Add the additional score of the current round and the prev-prev score (if needed).
-        //        return additonalScore + scoreIfPreviousWasStrike;
-        //    }
-
-        //    return 0;
-        //}
-
+        /// Returns a score of an individual frame. If the given index or frame doesn't exist, the return value is null.
+        /// </summary>
         public static int? GetFrameScore(ScoreCard scoreCard, int index)
         {
             return scoreCard.GetFrameScore(index);
         }
-
-        //private static int GetFrameDroppedPins(ScoreCard scoreCard, int index)
-        //{
-        //    // Do not return the score of the extra round (if exists), as it is calculated already.
-        //    if (IsIndexExtraRound(index))
-        //        return 0;
-
-        //    return scoreCard.GetFrame(index).NumOfDroppedPins;
-        //}
         #endregion
 
         #region Get game status methods
         private static bool IsBeyondExtraRound(int length)
         {
-            return length > BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + BowlingGameExtenstions.EXTRA_ROUNDS;
+            return length > BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + 
+                BowlingGameExtenstions.EXTRA_ROUNDS;
         }
 
         private static bool IsIncludeExtraRound(int length)
         {
-            return length >= BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS+ BowlingGameExtenstions.EXTRA_ROUNDS;
+            return length >= BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + 
+                BowlingGameExtenstions.EXTRA_ROUNDS;
         }
-
-        // Deprecated method after changing the score calculation approach
-        //private static bool IsIndexExtraRound(int length)
-        //{
-        //    return length == BowlingGameExtenstions.NUM_OF_REGULAR_ROUNDS + BowlingGameExtenstions.EXTRA_ROUNDS - 1;
-        //}
 
         private static bool IsInNormalRounds(int length)
         {
